@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const StaffReports = observer(() => {
+const ReportsView = observer(() => {
   const branchId = authStore.getBranchId();
   const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
   const accounts = getFromLocalStorage<TblTransactionAccount[]>("tblTransactionAccount") || [];
@@ -94,3 +94,5 @@ export const StaffReports = observer(() => {
     </Layout>
   );
 });
+
+export default ReportsView

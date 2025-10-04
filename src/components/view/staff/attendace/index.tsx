@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const StaffAttendance = observer(() => {
+const AttendanceView = observer(() => {
   const branchId = authStore.getBranchId();
   const attendance = getFromLocalStorage<TblAttendance[]>("tblAttendance") || [];
   const users = getFromLocalStorage<TblUser[]>("tblUser") || [];
@@ -110,3 +110,5 @@ export const StaffAttendance = observer(() => {
     </Layout>
   );
 });
+
+export default AttendanceView

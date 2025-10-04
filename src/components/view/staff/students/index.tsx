@@ -24,7 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const StaffStudents = observer(() => {
+const StudentsView = observer(() => {
   const branchId = authStore.getBranchId();
   const userId = authStore.getUserId();
   const students = studentStore.getStudentsByBranch(branchId || "");
@@ -302,3 +302,5 @@ export const StaffStudents = observer(() => {
     </Layout>
   );
 });
+
+export default StudentsView

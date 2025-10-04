@@ -6,7 +6,7 @@ import { authStore } from "@/stores/AuthStore";
 import { getFromLocalStorage } from "@/utils/localStorageHelper";
 import { TblStudent, TblReport } from "@/models/types";
 
-export const StaffDashboard = observer(() => {
+const DashboardView = observer(() => {
   const branchId = authStore.getBranchId();
   const students = getFromLocalStorage<TblStudent[]>("tblStudent") || [];
   const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
@@ -167,3 +167,5 @@ export const StaffDashboard = observer(() => {
     </Layout>
   );
 });
+
+export default DashboardView
