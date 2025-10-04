@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const ManagerInvoices = observer(() => {
+const InvoicesView = observer(() => {
   const branchId = authStore.getBranchId();
 
   // Mock invoice data for branch
@@ -86,3 +86,5 @@ export const ManagerInvoices = observer(() => {
     </Layout>
   );
 });
+
+export default InvoicesView

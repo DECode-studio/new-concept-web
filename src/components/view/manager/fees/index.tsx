@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const ManagerFees = observer(() => {
+const FeesView = observer(() => {
   const branchId = authStore.getBranchId();
   const userId = authStore.getUserId();
   const fees = chargeFeeStore.getFeesByBranch(branchId || "");
@@ -168,3 +168,5 @@ export const ManagerFees = observer(() => {
     </Layout>
   );
 });
+
+export default FeesView

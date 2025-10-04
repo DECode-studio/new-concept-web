@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const AdminFees = () => {
+const FeesView = () => {
   const fees = getFromLocalStorage<TblChargeFee[]>("tblChargeFee") || [];
   const branches = getFromLocalStorage<TblBranch[]>("tblBranch") || [];
   const classes = getFromLocalStorage<TblClass[]>("tblClass") || [];
@@ -80,3 +80,5 @@ export const AdminFees = () => {
     </Layout>
   );
 };
+
+export default FeesView

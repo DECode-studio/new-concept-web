@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const AdminReports = () => {
+const ReportsView = () => {
   const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
   const branches = getFromLocalStorage<TblBranch[]>("tblBranch") || [];
   const users = getFromLocalStorage<TblUser[]>("tblUser") || [];
@@ -104,3 +104,5 @@ export const AdminReports = () => {
     </Layout>
   );
 };
+
+export default ReportsView

@@ -5,7 +5,7 @@ import { getFromLocalStorage } from "@/utils/localStorageHelper";
 import { TblBranch, TblStudent, TblReport } from "@/models/types";
 import { TransactionStatus } from "@/models/enums";
 
-export const AdminDashboard = () => {
+const DashbaordView = () => {
   const branches = getFromLocalStorage<TblBranch[]>("tblBranch") || [];
   const students = getFromLocalStorage<TblStudent[]>("tblStudent") || [];
   const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
@@ -210,3 +210,5 @@ export const AdminDashboard = () => {
     </Layout>
   );
 };
+
+export default DashbaordView

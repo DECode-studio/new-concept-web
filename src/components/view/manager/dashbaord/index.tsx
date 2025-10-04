@@ -7,7 +7,7 @@ import { getFromLocalStorage } from "@/utils/localStorageHelper";
 import { TblStudent, TblReport } from "@/models/types";
 import { TransactionStatus } from "@/models/enums";
 
-export const ManagerDashboard = observer(() => {
+const DashboardView = observer(() => {
   const branchId = authStore.getBranchId();
   const students = getFromLocalStorage<TblStudent[]>("tblStudent") || [];
   const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
@@ -146,3 +146,5 @@ export const ManagerDashboard = observer(() => {
     </Layout>
   );
 });
+
+export default DashboardView

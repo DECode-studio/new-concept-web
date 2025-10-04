@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const AdminUsers = () => {
+const UsersView = () => {
   const users = getFromLocalStorage<TblUser[]>("tblUser") || [];
   const activeUsers = users.filter(u => !u.deleted);
 
@@ -85,3 +85,5 @@ export const AdminUsers = () => {
     </Layout>
   );
 };
+
+export default UsersView

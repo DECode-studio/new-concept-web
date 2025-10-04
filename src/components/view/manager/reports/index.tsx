@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const ManagerReports = observer(() => {
+const ReportsView = observer(() => {
   const branchId = authStore.getBranchId();
   const userId = authStore.getUserId();
   const reports = reportStore.getReportsByBranch(branchId || "");
@@ -174,3 +174,5 @@ export const ManagerReports = observer(() => {
     </Layout>
   );
 });
+
+export default ReportsView

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export const AdminInvoices = () => {
+const InvoicesView = () => {
   // Mock data - will be replaced with actual store
   const invoices = [
     {
@@ -77,3 +77,5 @@ export const AdminInvoices = () => {
     </Layout>
   );
 };
+
+export default InvoicesView

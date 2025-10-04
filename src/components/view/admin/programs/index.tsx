@@ -5,7 +5,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { getFromLocalStorage } from "@/utils/localStorageHelper";
 import { TblProgram } from "@/models/types";
 
-export const AdminPrograms = () => {
+const ProgramsView = () => {
   const programs = getFromLocalStorage<TblProgram[]>("tblProgram") || [];
   const activePrograms = programs.filter(p => !p.deleted);
 
@@ -50,3 +50,5 @@ export const AdminPrograms = () => {
     </Layout>
   );
 };
+
+export default ProgramsView
