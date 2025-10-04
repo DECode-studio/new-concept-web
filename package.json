@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf node_modules .next pnpm-lock.yaml && pnpm store prune"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
