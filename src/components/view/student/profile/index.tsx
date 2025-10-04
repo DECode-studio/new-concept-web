@@ -5,7 +5,7 @@ import { authStore } from "@/stores/AuthStore";
 import { studentStore } from "@/stores/StudentStore";
 import { Badge } from "@/components/ui/badge";
 
-export const StudentProfile = observer(() => {
+const ProfileView = observer(() => {
   const userId = authStore.getUserId();
   const student = studentStore.getStudentByUserId(userId || "");
 
@@ -147,3 +147,5 @@ export const StudentProfile = observer(() => {
     </Layout>
   );
 });
+
+export default ProfileView

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Calendar, Clock } from "lucide-react";
 
-export const StudentAttendance = observer(() => {
+const AttendanceView = observer(() => {
   const userId = authStore.getUserId();
   const attendance = getFromLocalStorage<TblAttendance[]>("tblAttendance") || [];
 
@@ -142,3 +142,5 @@ export const StudentAttendance = observer(() => {
     </Layout>
   );
 });
+
+export default AttendanceView

@@ -6,7 +6,7 @@ import { authStore } from "@/stores/AuthStore";
 import { studentStore } from "@/stores/StudentStore";
 import { Badge } from "@/components/ui/badge";
 
-export const StudentDashboard = observer(() => {
+const DashboardView = observer(() => {
   const userId = authStore.getUserId();
   const student = studentStore.getStudentByUserId(userId || "");
 
@@ -97,3 +97,5 @@ export const StudentDashboard = observer(() => {
     </Layout>
   );
 });
+
+export default DashboardView

@@ -6,7 +6,7 @@ import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/AuthStore";
 import { Badge } from "@/components/ui/badge";
 
-export const StudentInvoices = observer(() => {
+const InvoicesView = observer(() => {
   const userId = authStore.getUserId();
 
   // Mock data - will be replaced with actual invoice store
@@ -105,3 +105,5 @@ export const StudentInvoices = observer(() => {
     </Layout>
   );
 });
+
+export default InvoicesView
