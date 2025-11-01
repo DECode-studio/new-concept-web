@@ -1,68 +1,46 @@
-import { makeAutoObservable } from "mobx";
-import { TblClass } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblClass } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class ClassStore {
-  classes: TblClass[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadClasses();
+type Tables = import("@/models/types").Tables;
+
+export class ClassStore extends PersistentStore<TblClass> {
+  protected storageKey: keyof Tables = "tblClass";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadClasses() {
-    this.classes = getFromLocalStorage<TblClass[]>("tblClass") || [];
-  }
-
-  getAllClasses() {
-    return this.classes.filter(c => !c.deleted);
-  }
-
-  getClassById(id: string) {
-    return this.classes.find(c => c.id === id && !c.deleted);
-  }
-
-  addClass(classData: Omit<TblClass, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newClass: TblClass = {
-      ...classData,
-      id: `class-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  addClass(classItem: Omit<TblClass, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblClass = {
+      ...classItem,
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.classes.push(newClass);
-    this.saveClasses();
-    return newClass;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateClass(id: string, updates: Partial<TblClass>) {
-    const index = this.classes.findIndex(c => c.id === id);
-    if (index !== -1) {
-      this.classes[index] = {
-        ...this.classes[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveClasses();
-      return this.classes[index];
-    }
-    return null;
+  updateClass(id: string, updates: Partial<Omit<TblClass, "id" | "createdAt">>) {
+    const classItem = this.getById(id);
+    if (!classItem) return null;
+    Object.assign(classItem, updates, { updatedAt: nowISO() });
+    this.persist();
+    return classItem;
   }
 
   deleteClass(id: string) {
-    const index = this.classes.findIndex(c => c.id === id);
-    if (index !== -1) {
-      this.classes[index].deleted = true;
-      this.classes[index].deletedAt = new Date();
-      this.saveClasses();
-      return true;
-    }
-    return false;
-  }
-
-  private saveClasses() {
-    saveToLocalStorage("tblClass", this.classes);
+    const classItem = this.getById(id);
+    if (!classItem) return false;
+    this.softDelete(classItem);
+    this.persist();
+    return true;
   }
 }
-
-export const classStore = new ClassStore();

@@ -1,48 +1,54 @@
-import { makeAutoObservable } from "mobx";
-import { TblLog, MethodRequest } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import { MethodRequest } from "@/models/enums";
+import type { TblLog } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class LogStore {
-  logs: TblLog[] = [];
+import { PersistentStore } from "./BaseStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadLogs();
+type Tables = import("@/models/types").Tables;
+
+type RootStore = import("./RootStore").RootStore;
+
+export class LogStore extends PersistentStore<TblLog> {
+  protected storageKey: keyof Tables = "tblLog";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadLogs() {
-    this.logs = getFromLocalStorage<TblLog[]>("tblLog") || [];
-  }
-
-  getAllLogs() {
-    return this.logs.filter(l => !l.deleted).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }
-
-  getLogsByUser(userId: string) {
-    return this.logs.filter(l => l.userId === userId && !l.deleted);
-  }
-
-  addLog(userId: string, table: string, method: MethodRequest, reffId: string) {
-    const newLog: TblLog = {
-      id: `log-${Date.now()}`,
-      userId,
-      reffId,
+  record({
+    table,
+    method,
+    before,
+    after,
+    userId,
+    reffId,
+  }: {
+    table: string;
+    method: MethodRequest;
+    before?: unknown;
+    after?: unknown;
+    userId: string;
+    reffId?: string;
+  }) {
+    const entry: TblLog = {
+      id: uuidv7(),
       table,
       method,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      before,
+      after,
+      reffId,
+      userId,
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
       deleted: false,
     };
-    this.logs.push(newLog);
-    this.saveLogs();
-    return newLog;
+    this.items.push(entry);
+    this.persist();
+    return entry;
   }
 
-  private saveLogs() {
-    saveToLocalStorage("tblLog", this.logs);
+  addLog(userId: string, table: string, method: MethodRequest, reffId?: string, before?: unknown, after?: unknown) {
+    return this.record({ table, method, reffId, before, after, userId });
   }
 }
-
-export const logStore = new LogStore();

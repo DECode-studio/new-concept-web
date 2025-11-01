@@ -1,72 +1,60 @@
-import { makeAutoObservable } from "mobx";
-import { TblReport } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblReport } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class ReportStore {
-  reports: TblReport[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadReports();
+type Tables = import("@/models/types").Tables;
+
+export class ReportStore extends PersistentStore<TblReport> {
+  protected storageKey: keyof Tables = "tblReport";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadReports() {
-    this.reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
+  getByBranch(branchId: string) {
+    return this.list().filter((report) => report.branchId === branchId);
   }
 
-  getAllReports() {
-    return this.reports.filter(r => !r.deleted);
-  }
-
-  getReportsByBranch(branchId: string) {
-    return this.reports.filter(r => r.branchId === branchId && !r.deleted);
-  }
-
-  getReportById(id: string) {
-    return this.reports.find(r => r.id === id && !r.deleted);
-  }
-
-  addReport(report: Omit<TblReport, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newReport: TblReport = {
+  addReport(report: Omit<TblReport, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblReport = {
       ...report,
-      id: `report-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
+      finalized: report.finalized ?? false,
       deleted: false,
     };
-    this.reports.push(newReport);
-    this.saveReports();
-    return newReport;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateReport(id: string, updates: Partial<TblReport>) {
-    const index = this.reports.findIndex(r => r.id === id);
-    if (index !== -1) {
-      this.reports[index] = {
-        ...this.reports[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveReports();
-      return this.reports[index];
-    }
-    return null;
+  updateReport(id: string, updates: Partial<Omit<TblReport, "id" | "createdAt">>) {
+    const report = this.getById(id);
+    if (!report) return null;
+    Object.assign(report, updates, { updatedAt: nowISO() });
+    this.persist();
+    return report;
   }
 
   deleteReport(id: string) {
-    const index = this.reports.findIndex(r => r.id === id);
-    if (index !== -1) {
-      this.reports[index].deleted = true;
-      this.reports[index].deletedAt = new Date();
-      this.saveReports();
-      return true;
-    }
-    return false;
+    const report = this.getById(id);
+    if (!report) return false;
+    this.softDelete(report);
+    this.persist();
+    return true;
   }
 
-  private saveReports() {
-    saveToLocalStorage("tblReport", this.reports);
+  finalizeReport(id: string) {
+    const report = this.getById(id);
+    if (!report || report.finalized) return report ?? null;
+    report.finalized = true;
+    report.updatedAt = nowISO();
+    this.persist();
+    return report;
   }
 }
-
-export const reportStore = new ReportStore();

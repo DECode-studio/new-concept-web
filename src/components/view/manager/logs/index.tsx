@@ -1,11 +1,9 @@
-import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
 import { observer } from "mobx-react-lite";
-import { authStore } from "@/stores/AuthStore";
-import { logStore } from "@/stores/LogStore";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getFromLocalStorage } from "@/utils/localStorageHelper";
-import { TblUser } from "@/models/types";
 import {
   Table,
   TableBody,
@@ -14,79 +12,71 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { authStore, logStore, userStore } from "@/stores";
+import { MethodRequest } from "@/models/types";
+
+const variantForMethod: Record<MethodRequest, "default" | "secondary" | "destructive" | "outline"> = {
+  [MethodRequest.CREATE]: "default",
+  [MethodRequest.UPDATE]: "secondary",
+  [MethodRequest.DELETE]: "destructive",
+};
 
 const LogsView = observer(() => {
   const branchId = authStore.getBranchId();
-  const logs = logStore.getAllLogs();
-  const users = getFromLocalStorage<TblUser[]>("tblUser") || [];
+  const users = userStore.list();
+  const branchUserIds = branchId ? users.filter((user) => user.branchId === branchId).map((user) => user.id) : [];
+  const logs = logStore.list().filter((log) => branchUserIds.includes(log.userId));
 
-  // Filter logs for branch users only
-  const branchUserIds = users.filter(u => u.branchId === branchId).map(u => u.id);
-  const branchLogs = logs.filter(l => branchUserIds.includes(l.userId));
-
-  const getUserName = (id: string) => users.find(u => u.id === id)?.name || "-";
-
-  const getMethodVariant = (method: string) => {
-    switch (method) {
-      case "CREATE": return "default";
-      case "UPDATE": return "secondary";
-      case "DELETE": return "destructive";
-      default: return "outline";
-    }
-  };
+  const getUserName = (id: string) => users.find((user) => user.id === id)?.name ?? "-";
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Activity Logs</h1>
-          <p className="text-muted-foreground">Branch activity and audit trail</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Time</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Table</TableHead>
-                  <TableHead>Reference ID</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {branchLogs.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No activity logs yet
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  branchLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
-                      <TableCell className="font-medium">{getUserName(log.userId)}</TableCell>
-                      <TableCell>
-                        <Badge variant={getMethodVariant(log.method)}>
-                          {log.method}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{log.table}</TableCell>
-                      <TableCell className="font-mono text-xs">{log.reffId}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Activity Logs</h1>
+        <p className="text-muted-foreground">Branch activity and audit trail</p>
       </div>
-    </Layout>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activities</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Table</TableHead>
+                <TableHead>Reference ID</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No activity logs yet
+                  </TableCell>
+                </TableRow>
+              ) : (
+                logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
+                    <TableCell className="font-medium">{getUserName(log.userId)}</TableCell>
+                    <TableCell>
+                      <Badge variant={variantForMethod[log.method] ?? "outline"}>{log.method}</Badge>
+                    </TableCell>
+                    <TableCell>{log.table}</TableCell>
+                    <TableCell className="font-mono text-xs">{log.reffId ?? "-"}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 });
 
-export default LogsView
+export default LogsView;

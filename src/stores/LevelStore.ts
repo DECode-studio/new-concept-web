@@ -1,72 +1,46 @@
-import { makeAutoObservable } from "mobx";
-import { TblLevel } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblLevel } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class LevelStore {
-  levels: TblLevel[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadLevels();
+type Tables = import("@/models/types").Tables;
+
+export class LevelStore extends PersistentStore<TblLevel> {
+  protected storageKey: keyof Tables = "tblLevel";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadLevels() {
-    this.levels = getFromLocalStorage<TblLevel[]>("tblLevel") || [];
-  }
-
-  getAllLevels() {
-    return this.levels.filter(l => !l.deleted);
-  }
-
-  getLevelsByClass(classId: string) {
-    return this.levels.filter(l => l.classId === classId && !l.deleted);
-  }
-
-  getLevelById(id: string) {
-    return this.levels.find(l => l.id === id && !l.deleted);
-  }
-
-  addLevel(level: Omit<TblLevel, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newLevel: TblLevel = {
+  addLevel(level: Omit<TblLevel, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblLevel = {
       ...level,
-      id: `level-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.levels.push(newLevel);
-    this.saveLevels();
-    return newLevel;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateLevel(id: string, updates: Partial<TblLevel>) {
-    const index = this.levels.findIndex(l => l.id === id);
-    if (index !== -1) {
-      this.levels[index] = {
-        ...this.levels[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveLevels();
-      return this.levels[index];
-    }
-    return null;
+  updateLevel(id: string, updates: Partial<Omit<TblLevel, "id" | "createdAt">>) {
+    const level = this.getById(id);
+    if (!level) return null;
+    Object.assign(level, updates, { updatedAt: nowISO() });
+    this.persist();
+    return level;
   }
 
   deleteLevel(id: string) {
-    const index = this.levels.findIndex(l => l.id === id);
-    if (index !== -1) {
-      this.levels[index].deleted = true;
-      this.levels[index].deletedAt = new Date();
-      this.saveLevels();
-      return true;
-    }
-    return false;
-  }
-
-  private saveLevels() {
-    saveToLocalStorage("tblLevel", this.levels);
+    const level = this.getById(id);
+    if (!level) return false;
+    this.softDelete(level);
+    this.persist();
+    return true;
   }
 }
-
-export const levelStore = new LevelStore();

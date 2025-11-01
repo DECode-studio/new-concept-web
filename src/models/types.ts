@@ -12,7 +12,6 @@ import {
   MethodRequest,
 } from "./enums";
 
-// Re-export enums for convenience
 export {
   UserRoles,
   UserStatus,
@@ -29,32 +28,34 @@ export {
 
 export interface TblUser {
   id: string;
-  branchId: string;
+  branchId: string | null;
   image?: string;
   name: string;
   email: string;
-  password: string;
+  passwordHash: string;
+  salt: string;
   role: UserRoles;
   status: UserStatus;
-  lastLogin?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  lastLogin?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
 export interface TblBranch {
   id: string;
+  code: string;
   name: string;
   phone: string;
-  description: string;
+  description?: string;
   type: BranchType;
   address: string;
   postCode: string;
   registerFee: number;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -62,20 +63,20 @@ export interface TblProgram {
   id: string;
   key: string;
   name: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
 export interface TblClass {
   id: string;
   name: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -83,10 +84,10 @@ export interface TblLevel {
   id: string;
   classId: string;
   name: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -98,10 +99,10 @@ export interface TblChargeFee {
   charge: number;
   chargeCash: number;
   chargePerMonth: number;
-  chargePer2Month: number;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  chargePer2Month?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -117,31 +118,31 @@ export interface TblStudent {
   registrationNumber: string;
   imageProfile?: string;
   fullName: string;
-  nickName: string;
-  title: UserTitle;
-  placeBirth: string;
-  dateBirth: Date;
-  gender: UserGender;
-  blodGroup: UserBloodGroup;
-  address: string;
-  postCode: string;
-  phone: string;
-  citizenship: string;
-  reportMark: string;
-  school: string;
-  religion: string;
-  class: string;
-  hobby: string;
-  organizationName: string;
-  organizationAddress: string;
-  isUnderAge: boolean;
+  nickName?: string;
+  title?: UserTitle;
+  placeBirth?: string;
+  dateBirth?: string;
+  gender?: UserGender;
+  bloodGroup?: UserBloodGroup;
+  address?: string;
+  postCode?: string;
+  phone?: string;
+  citizenship?: string;
+  reportMark?: string;
+  school?: string;
+  religion?: string;
+  class?: string;
+  hobby?: string;
+  organizationName?: string;
+  organizationAddress?: string;
+  isUnderAge?: boolean;
   parentName?: string;
   parentOccupation?: string;
   parentAddress?: string;
-  studyStartTime: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  studyStartTime?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -150,9 +151,9 @@ export interface TblTransactionAccount {
   code: string;
   category: AccountCategory;
   name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -162,12 +163,15 @@ export interface TblReport {
   userId: string;
   branchId: string;
   name: string;
-  description: string;
+  description?: string;
   amount: number;
   status: TransactionStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  periodType?: "DAY" | "WEEK" | "MONTH" | "YEAR";
+  periodKey?: string;
+  finalized?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
@@ -175,26 +179,95 @@ export interface TblAttendance {
   id: string;
   userId: string;
   branchId: string;
-  classId: string;
-  levelId: string;
-  description: string;
-  clockIn: Date;
-  clockOut?: Date;
+  classId?: string;
+  levelId?: string;
+  description?: string;
+  clockIn?: string;
+  clockOut?: string;
   status: AttendanceStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  deleted: boolean;
+}
+
+export interface TblVoucher {
+  id: string;
+  code: string;
+  type: "PERCENT" | "AMOUNT";
+  value: number;
+  scope: "GLOBAL" | "BRANCH" | "PROGRAM" | "CLASS" | "LEVEL" | "STUDENT";
+  branchId?: string;
+  programId?: string;
+  classId?: string;
+  levelId?: string;
+  studentId?: string;
+  active: boolean;
+  startAt?: string;
+  endAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  deleted: boolean;
+}
+
+export interface TblInvoiceItem {
+  id: string;
+  invoiceId: string;
+  description: string;
+  qty: number;
+  price: number;
+  subtotal: number;
+}
+
+export interface TblInvoice {
+  id: string;
+  visibleNumber: string;
+  branchId: string;
+  studentId: string;
+  chargeId?: string;
+  period: string;
+  dueDate?: string;
+  discountVoucherId?: string;
+  discountAmount?: number;
+  totalAmount: number;
+  status: TransactionStatus;
+  paidAt?: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
 
 export interface TblLog {
   id: string;
   userId: string;
-  reffId: string;
+  reffId?: string;
   table: string;
   method: MethodRequest;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  before?: unknown;
+  after?: unknown;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   deleted: boolean;
 }
+
+export type Tables = {
+  tblUser: TblUser[];
+  tblBranch: TblBranch[];
+  tblProgram: TblProgram[];
+  tblClass: TblClass[];
+  tblLevel: TblLevel[];
+  tblChargeFee: TblChargeFee[];
+  tblStudent: TblStudent[];
+  tblTransactionAccount: TblTransactionAccount[];
+  tblReport: TblReport[];
+  tblAttendance: TblAttendance[];
+  tblVoucher: TblVoucher[];
+  tblInvoice: TblInvoice[];
+  tblInvoiceItem: TblInvoiceItem[];
+  tblLog: TblLog[];
+};

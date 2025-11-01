@@ -1,68 +1,46 @@
-import { makeAutoObservable } from "mobx";
-import { TblProgram } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblProgram } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class ProgramStore {
-  programs: TblProgram[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadPrograms();
+type Tables = import("@/models/types").Tables;
+
+export class ProgramStore extends PersistentStore<TblProgram> {
+  protected storageKey: keyof Tables = "tblProgram";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadPrograms() {
-    this.programs = getFromLocalStorage<TblProgram[]>("tblProgram") || [];
-  }
-
-  getAllPrograms() {
-    return this.programs.filter(p => !p.deleted);
-  }
-
-  getProgramById(id: string) {
-    return this.programs.find(p => p.id === id && !p.deleted);
-  }
-
-  addProgram(program: Omit<TblProgram, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newProgram: TblProgram = {
+  addProgram(program: Omit<TblProgram, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblProgram = {
       ...program,
-      id: `program-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.programs.push(newProgram);
-    this.savePrograms();
-    return newProgram;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateProgram(id: string, updates: Partial<TblProgram>) {
-    const index = this.programs.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.programs[index] = {
-        ...this.programs[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.savePrograms();
-      return this.programs[index];
-    }
-    return null;
+  updateProgram(id: string, updates: Partial<Omit<TblProgram, "id" | "createdAt">>) {
+    const program = this.getById(id);
+    if (!program) return null;
+    Object.assign(program, updates, { updatedAt: nowISO() });
+    this.persist();
+    return program;
   }
 
   deleteProgram(id: string) {
-    const index = this.programs.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.programs[index].deleted = true;
-      this.programs[index].deletedAt = new Date();
-      this.savePrograms();
-      return true;
-    }
-    return false;
-  }
-
-  private savePrograms() {
-    saveToLocalStorage("tblProgram", this.programs);
+    const program = this.getById(id);
+    if (!program) return false;
+    this.softDelete(program);
+    this.persist();
+    return true;
   }
 }
-
-export const programStore = new ProgramStore();

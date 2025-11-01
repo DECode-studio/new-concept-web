@@ -1,69 +1,50 @@
-import { makeAutoObservable } from "mobx";
-import { TblBranch } from "../models/types";
-import { BranchType } from "../models/enums";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblBranch } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class BranchStore {
-  branches: TblBranch[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadBranches();
+type Tables = import("@/models/types").Tables;
+
+export class BranchStore extends PersistentStore<TblBranch> {
+  protected storageKey: keyof Tables = "tblBranch";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadBranches() {
-    this.branches = getFromLocalStorage<TblBranch[]>("tblBranch") || [];
+  getActiveBranches() {
+    return this.list();
   }
 
-  getAllBranches() {
-    return this.branches.filter(b => !b.deleted);
-  }
-
-  getBranchById(id: string) {
-    return this.branches.find(b => b.id === id && !b.deleted);
-  }
-
-  addBranch(branch: Omit<TblBranch, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newBranch: TblBranch = {
+  addBranch(branch: Omit<TblBranch, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblBranch = {
       ...branch,
-      id: `branch-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.branches.push(newBranch);
-    this.saveBranches();
-    return newBranch;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateBranch(id: string, updates: Partial<TblBranch>) {
-    const index = this.branches.findIndex(b => b.id === id);
-    if (index !== -1) {
-      this.branches[index] = {
-        ...this.branches[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveBranches();
-      return this.branches[index];
-    }
-    return null;
+  updateBranch(id: string, updates: Partial<Omit<TblBranch, "id" | "createdAt">>) {
+    const branch = this.getById(id);
+    if (!branch) return null;
+    Object.assign(branch, updates, { updatedAt: nowISO() });
+    this.persist();
+    return branch;
   }
 
   deleteBranch(id: string) {
-    const index = this.branches.findIndex(b => b.id === id);
-    if (index !== -1) {
-      this.branches[index].deleted = true;
-      this.branches[index].deletedAt = new Date();
-      this.saveBranches();
-      return true;
-    }
-    return false;
-  }
-
-  private saveBranches() {
-    saveToLocalStorage("tblBranch", this.branches);
+    const branch = this.getById(id);
+    if (!branch) return false;
+    this.softDelete(branch);
+    this.persist();
+    return true;
   }
 }
-
-export const branchStore = new BranchStore();

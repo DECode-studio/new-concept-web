@@ -1,76 +1,46 @@
-import { makeAutoObservable } from "mobx";
-import { TblStudent } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblStudent } from "@/models/types";
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-class StudentStore {
-  students: TblStudent[] = [];
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadStudents();
+type Tables = import("@/models/types").Tables;
+
+export class StudentStore extends PersistentStore<TblStudent> {
+  protected storageKey: keyof Tables = "tblStudent";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadStudents() {
-    this.students = getFromLocalStorage<TblStudent[]>("tblStudent") || [];
+  getByUserId(userId: string) {
+    return this.list().find((student) => student.userId === userId) ?? null;
   }
 
-  getAllStudents() {
-    return this.students.filter(s => !s.deleted);
+  getByBranch(branchId: string) {
+    return this.list().filter((student) => student.branchId === branchId);
   }
 
-  getStudentsByBranch(branchId: string) {
-    return this.students.filter(s => s.branchId === branchId && !s.deleted);
-  }
-
-  getStudentById(id: string) {
-    return this.students.find(s => s.id === id && !s.deleted);
-  }
-
-  getStudentByUserId(userId: string) {
-    return this.students.find(s => s.userId === userId && !s.deleted);
-  }
-
-  addStudent(student: Omit<TblStudent, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newStudent: TblStudent = {
+  addStudent(student: Omit<TblStudent, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblStudent = {
       ...student,
-      id: `student-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.students.push(newStudent);
-    this.saveStudents();
-    return newStudent;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateStudent(id: string, updates: Partial<TblStudent>) {
-    const index = this.students.findIndex(s => s.id === id);
-    if (index !== -1) {
-      this.students[index] = {
-        ...this.students[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveStudents();
-      return this.students[index];
-    }
-    return null;
-  }
-
-  deleteStudent(id: string) {
-    const index = this.students.findIndex(s => s.id === id);
-    if (index !== -1) {
-      this.students[index].deleted = true;
-      this.students[index].deletedAt = new Date();
-      this.saveStudents();
-      return true;
-    }
-    return false;
-  }
-
-  private saveStudents() {
-    saveToLocalStorage("tblStudent", this.students);
+  updateStudent(id: string, updates: Partial<Omit<TblStudent, "id" | "createdAt">>) {
+    const student = this.getById(id);
+    if (!student) return null;
+    Object.assign(student, updates, { updatedAt: nowISO() });
+    this.persist();
+    return student;
   }
 }
-
-export const studentStore = new StudentStore();

@@ -1,72 +1,51 @@
-import { makeAutoObservable } from "mobx";
-import { TblChargeFee } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblChargeFee } from "@/models/types";
 
-class ChargeFeeStore {
-  fees: TblChargeFee[] = [];
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadFees();
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
+
+type Tables = import("@/models/types").Tables;
+
+export class ChargeFeeStore extends PersistentStore<TblChargeFee> {
+  protected storageKey: keyof Tables = "tblChargeFee";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadFees() {
-    this.fees = getFromLocalStorage<TblChargeFee[]>("tblChargeFee") || [];
+  findByBranch(branchId: string) {
+    return this.list().filter((fee) => fee.branchId === branchId);
   }
 
-  getAllFees() {
-    return this.fees.filter(f => !f.deleted);
-  }
-
-  getFeesByBranch(branchId: string) {
-    return this.fees.filter(f => f.branchId === branchId && !f.deleted);
-  }
-
-  getFeeById(id: string) {
-    return this.fees.find(f => f.id === id && !f.deleted);
-  }
-
-  addFee(fee: Omit<TblChargeFee, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newFee: TblChargeFee = {
+  addFee(fee: Omit<TblChargeFee, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblChargeFee = {
       ...fee,
-      id: `fee-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.fees.push(newFee);
-    this.saveFees();
-    return newFee;
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 
-  updateFee(id: string, updates: Partial<TblChargeFee>) {
-    const index = this.fees.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.fees[index] = {
-        ...this.fees[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveFees();
-      return this.fees[index];
-    }
-    return null;
+  updateFee(id: string, updates: Partial<Omit<TblChargeFee, "id" | "createdAt">>) {
+    const fee = this.getById(id);
+    if (!fee) return null;
+    Object.assign(fee, updates, { updatedAt: nowISO() });
+    this.persist();
+    return fee;
   }
 
   deleteFee(id: string) {
-    const index = this.fees.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.fees[index].deleted = true;
-      this.fees[index].deletedAt = new Date();
-      this.saveFees();
-      return true;
-    }
-    return false;
-  }
-
-  private saveFees() {
-    saveToLocalStorage("tblChargeFee", this.fees);
+    const fee = this.getById(id);
+    if (!fee) return false;
+    this.softDelete(fee);
+    this.persist();
+    return true;
   }
 }
-
-export const chargeFeeStore = new ChargeFeeStore();

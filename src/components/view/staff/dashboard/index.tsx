@@ -1,171 +1,180 @@
-import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, ClipboardList, TrendingUp } from "lucide-react";
+"use client";
+
 import { observer } from "mobx-react-lite";
-import { authStore } from "@/stores/AuthStore";
-import { getFromLocalStorage } from "@/utils/localStorageHelper";
-import { TblStudent, TblReport } from "@/models/types";
+import { ClipboardList, FileText, Users, Zap } from "lucide-react";
 
-const DashboardView = observer(() => {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { authStore, studentStore, reportStore } from "@/stores";
+import { TransactionStatus } from "@/models/enums";
+import { formatIDR } from "@/utils/number";
+
+const StaffDashboard = observer(() => {
   const branchId = authStore.getBranchId();
-  const students = getFromLocalStorage<TblStudent[]>("tblStudent") || [];
-  const reports = getFromLocalStorage<TblReport[]>("tblReport") || [];
+  const students = branchId ? studentStore.getByBranch(branchId) : [];
+  const reports = branchId ? reportStore.getByBranch(branchId) : [];
 
-  const branchStudents = students.filter(s => s.branchId === branchId && !s.deleted);
-  const activeStudents = branchStudents.filter(s => s.status === "ACTIVE").length;
-
-  const todayReports = reports.filter(r => {
+  const todaysReports = reports.filter((report) => {
     const today = new Date().toDateString();
-    const reportDate = new Date(r.createdAt).toDateString();
-    return r.branchId === branchId && !r.deleted && reportDate === today;
+    return new Date(report.createdAt).toDateString() === today;
   });
 
+  const successReportsToday = todaysReports.filter(
+    (report) => report.status === TransactionStatus.SUCCESS,
+  );
+
+  const incomeToday = successReportsToday
+    .filter((report) => report.amount > 0)
+    .reduce((acc, report) => acc + report.amount, 0);
+
+  const pendingToday = todaysReports.filter(
+    (report) => report.status === TransactionStatus.PENDING,
+  ).length;
+
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Staff Dashboard</h1>
-          <p className="text-muted-foreground">
-            Daily operations and data entry
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Students
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                In this branch
+    <div className="space-y-8 pb-8">
+      <Card className="border-none bg-gradient-to-br from-primary/20 via-primary/10 to-background">
+        <CardContent className="flex flex-col gap-5 p-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <Zap className="h-3 w-3" />
+              Daily Operations
+            </span>
+            <div>
+              <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                Ready for a productive day?
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Log today&apos;s activity, stay ahead of pending invoices, and keep student data tidy.
+                Everything you need lives right here.
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Today's Reports
-              </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayReports.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Entries today
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Tasks
-              </CardTitle>
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Tasks to complete
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Performance
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">Good</div>
-              <p className="text-xs text-muted-foreground">
-                Work status
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common daily tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="hover:bg-accent cursor-pointer transition-colors">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <Users className="h-8 w-8 text-primary" />
-                    <h3 className="font-semibold">Add Student</h3>
-                    <p className="text-xs text-muted-foreground">Register new student</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:bg-accent cursor-pointer transition-colors">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <FileText className="h-8 w-8 text-secondary" />
-                    <h3 className="font-semibold">Add Report</h3>
-                    <p className="text-xs text-muted-foreground">Input financial report</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:bg-accent cursor-pointer transition-colors">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <ClipboardList className="h-8 w-8 text-accent" />
-                    <h3 className="font-semibold">Mark Attendance</h3>
-                    <p className="text-xs text-muted-foreground">Record attendance</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
+          </div>
+          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            Start checklist
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-none bg-card shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Today&apos;s Reports
+              </p>
+              <p className="text-3xl font-semibold text-foreground">{todaysReports.length}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Entries submitted today</p>
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {todayReports.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No activity today. Start by adding reports or student data.
-                </p>
-              ) : (
-                todayReports.slice(0, 5).map((report) => (
-                  <div key={report.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{report.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(report.createdAt).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold">
-                      Rp {Math.abs(report.amount).toLocaleString()}
-                    </p>
-                  </div>
-                ))
-              )}
+        <Card className="border-none bg-card shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Revenue Logged
+              </p>
+              <p className="text-3xl font-semibold text-primary">{formatIDR(incomeToday)}</p>
             </div>
+            <p className="text-xs text-muted-foreground">Successful payments captured today</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none bg-card shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Pending Items
+              </p>
+              <p className="text-3xl font-semibold text-amber-600">{pendingToday}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Awaiting manager review</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none bg-card shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Branch Students
+              </p>
+              <p className="text-3xl font-semibold text-foreground">
+                {students.length.toLocaleString("id-ID")}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">Keep profiles up to date</p>
           </CardContent>
         </Card>
       </div>
-    </Layout>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Links</CardTitle>
+            <p className="text-xs text-muted-foreground">Frequently used workflows.</p>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            <Button variant="outline" className="h-24 flex-col items-start justify-start gap-2 text-left">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Register Student</span>
+              <span className="text-xs text-muted-foreground">Onboard a new learner instantly</span>
+            </Button>
+            <Button variant="outline" className="h-24 flex-col items-start justify-start gap-2 text-left">
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Log Payment</span>
+              <span className="text-xs text-muted-foreground">Record tuition or material fees</span>
+            </Button>
+            <Button variant="outline" className="h-24 flex-col items-start justify-start gap-2 text-left">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Update Attendance</span>
+              <span className="text-xs text-muted-foreground">Mark today&apos;s attendance sheet</span>
+            </Button>
+            <Button variant="outline" className="h-24 flex-col items-start justify-start gap-2 text-left">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Create Task</span>
+              <span className="text-xs text-muted-foreground">Assign follow-up to coaches</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Today&apos;s Checklist</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Work down this list to keep operations humming.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              {
+                title: "Verify tuition receipts",
+                detail: `${successReportsToday.length} payments logged today`,
+              },
+              {
+                title: "Update classroom roster",
+                detail: `${students.filter((student) => student.status !== "ACTIVE").length} profiles need attention`,
+              },
+              {
+                title: "Sync with manager",
+                detail: `${pendingToday} finance entries pending approval`,
+              },
+            ].map((item) => (
+              <div key={item.title} className="flex items-center justify-between rounded-lg border bg-muted/40 p-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.detail}</p>
+                </div>
+                <Button variant="ghost" size="sm">
+                  Complete
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 });
 
-export default DashboardView
+export default StaffDashboard;

@@ -1,76 +1,39 @@
-import { makeAutoObservable } from "mobx";
-import { TblAttendance } from "../models/types";
-import { getFromLocalStorage, saveToLocalStorage } from "../utils/localStorageHelper";
+import type { TblAttendance } from "@/models/types";
 
-class AttendanceStore {
-  attendances: TblAttendance[] = [];
+import { uuidv7 } from "@/utils/id";
+import { nowISO } from "@/utils/time";
 
-  constructor() {
-    makeAutoObservable(this);
-    this.loadAttendances();
+import { PersistentStore } from "./BaseStore";
+import type { RootStore } from "./RootStore";
+
+type Tables = import("@/models/types").Tables;
+
+export class AttendanceStore extends PersistentStore<TblAttendance> {
+  protected storageKey: keyof Tables = "tblAttendance";
+
+  constructor(root: RootStore) {
+    super(root);
   }
 
-  loadAttendances() {
-    this.attendances = getFromLocalStorage<TblAttendance[]>("tblAttendance") || [];
+  getByUser(userId: string) {
+    return this.list().filter((attendance) => attendance.userId === userId);
   }
 
-  getAllAttendances() {
-    return this.attendances.filter(a => !a.deleted);
+  getByBranch(branchId: string) {
+    return this.list().filter((attendance) => attendance.branchId === branchId);
   }
 
-  getAttendancesByBranch(branchId: string) {
-    return this.attendances.filter(a => a.branchId === branchId && !a.deleted);
-  }
-
-  getAttendancesByUser(userId: string) {
-    return this.attendances.filter(a => a.userId === userId && !a.deleted);
-  }
-
-  getAttendanceById(id: string) {
-    return this.attendances.find(a => a.id === id && !a.deleted);
-  }
-
-  addAttendance(attendance: Omit<TblAttendance, "id" | "createdAt" | "updatedAt" | "deleted">) {
-    const newAttendance: TblAttendance = {
+  addAttendance(attendance: Omit<TblAttendance, "id" | "createdAt" | "updatedAt" | "deleted" | "deletedAt">) {
+    const now = nowISO();
+    const record: TblAttendance = {
       ...attendance,
-      id: `attendance-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: uuidv7(),
+      createdAt: now,
+      updatedAt: now,
       deleted: false,
     };
-    this.attendances.push(newAttendance);
-    this.saveAttendances();
-    return newAttendance;
-  }
-
-  updateAttendance(id: string, updates: Partial<TblAttendance>) {
-    const index = this.attendances.findIndex(a => a.id === id);
-    if (index !== -1) {
-      this.attendances[index] = {
-        ...this.attendances[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.saveAttendances();
-      return this.attendances[index];
-    }
-    return null;
-  }
-
-  deleteAttendance(id: string) {
-    const index = this.attendances.findIndex(a => a.id === id);
-    if (index !== -1) {
-      this.attendances[index].deleted = true;
-      this.attendances[index].deletedAt = new Date();
-      this.saveAttendances();
-      return true;
-    }
-    return false;
-  }
-
-  private saveAttendances() {
-    saveToLocalStorage("tblAttendance", this.attendances);
+    this.items.push(record);
+    this.persist();
+    return record;
   }
 }
-
-export const attendanceStore = new AttendanceStore();

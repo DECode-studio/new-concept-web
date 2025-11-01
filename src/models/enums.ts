@@ -31,7 +31,7 @@ export enum UserBloodGroup {
 
 export enum StudentStatus {
   ACTIVE = "ACTIVE",
-  DORMAN = "DORMAN",
+  DORMANT = "DORMANT",
   INACTIVE = "INACTIVE",
 }
 
@@ -41,7 +41,7 @@ export enum BranchType {
 }
 
 export enum AccountCategory {
-  AKTIFA = "AKTIFA",
+  AKTIVA = "AKTIVA",
   KEWAJIBAN = "KEWAJIBAN",
   EKUITAS = "EKUITAS",
   PENDAPATAN = "PENDAPATAN",
