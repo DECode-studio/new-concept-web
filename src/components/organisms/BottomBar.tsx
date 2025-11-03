@@ -41,8 +41,8 @@ export const BottomBar = observer(() => {
   if (!items.length) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
-      <nav className="flex items-center justify-around">
+    <div className="fixed bottom-4 left-1/2 z-50 w-[90%] max-w-xl -translate-x-1/2 rounded-3xl border border-white/40 bg-gradient-to-r from-[#6c63ff] to-[#9a8cff] p-3 text-white shadow-[0_25px_55px_-35px_rgba(108,99,255,0.45)] backdrop-blur-xl md:hidden">
+      <nav className="flex items-center justify-around gap-2">
         {items.map(({ href, title, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -50,11 +50,13 @@ export const BottomBar = observer(() => {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 text-xs transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                "flex flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[11px] font-medium uppercase tracking-[0.2em] transition",
+                isActive
+                  ? "bg-white/20 text-white shadow-[0_12px_25px_-15px_rgba(108,99,255,0.55)]"
+                  : "text-white/70 hover:bg-white/15 hover:text-white"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-white/65")} />
               <span>{title}</span>
             </Link>
           );

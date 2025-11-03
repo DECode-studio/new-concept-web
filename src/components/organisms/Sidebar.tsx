@@ -84,8 +84,14 @@ export const Sidebar = observer(({ className, onItemClick }: SidebarProps) => {
   const pathname = usePathname();
 
   return (
-    <aside className={cn("pb-12", className)}>
-      <nav className="space-y-1 px-3 py-4">
+    <aside className={cn("flex h-full flex-col gap-6 px-6 py-8 text-[#1f2440]", className)}>
+      <div className="rounded-3xl border border-white/40 bg-white p-5 shadow-[0_35px_55px_-40px_rgba(108,99,255,0.25)] backdrop-blur-2xl">
+        <p className="text-xs uppercase tracking-[0.35em] text-[#1f2440]/70">Workspace</p>
+        <p className="mt-3 text-lg font-semibold">{authStore.currentUser?.name ?? "Team"}</p>
+        <p className="text-xs text-[#1f2440]/60">{authStore.currentUser?.email ?? "Signed in"}</p>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-3">
         {navItems.map(({ href, title, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -94,14 +100,15 @@ export const Sidebar = observer(({ className, onItemClick }: SidebarProps) => {
               href={href}
               onClick={onItemClick}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
+                "group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-white/40 px-4 py-3 text-sm font-medium tracking-wide transition",
                 isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-gradient-to-r from-[#6c63ff]/18 via-[#9a8cff]/10 to-transparent text-[#1f2440] shadow-[0_25px_45px_-25px_rgba(108,99,255,0.3)]"
+                  : "bg-white text-[#1f2440] hover:border-white hover:bg-white/90"
               )}
             >
-              <Icon className="h-4 w-4" />
-              {title}
+              <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#6c63ff]/60 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
+              <Icon className={cn("h-4 w-4 transition", isActive ? "scale-110 text-[#6c63ff]" : "text-[#1f2440]/45")} />
+              <span>{title}</span>
             </Link>
           );
         })}

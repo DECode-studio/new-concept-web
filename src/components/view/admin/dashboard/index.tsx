@@ -2,12 +2,12 @@
 
 import { observer } from "mobx-react-lite";
 import {
+  Activity,
   ArrowUpRight,
   Building2,
-  LucideIcon,
+  Flame,
+  LineChart,
   Sparkles,
-  TrendingDown,
-  TrendingUp,
   Users,
 } from "lucide-react";
 
@@ -16,42 +16,47 @@ import { Button } from "@/components/ui/button";
 import { branchStore, studentStore, reportStore, logStore } from "@/stores";
 import { TransactionStatus } from "@/models/enums";
 import { formatIDR } from "@/utils/number";
+import { cn } from "@/lib/utils";
 
-const metricCard = (
-  title: string,
-  value: string,
-  delta: string,
-  icon: LucideIcon,
-  accent: string,
-) => (
-  <Card className="overflow-hidden border-none bg-gradient-to-br from-white via-white to-muted shadow-sm dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800">
-    <CardContent className="flex h-full flex-col justify-between gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {title}
-          </p>
-          <p className="text-3xl font-semibold text-foreground">{value}</p>
+type MetricCardProps = {
+  title: string;
+  value: string;
+  subLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: "primary" | "secondary" | "emerald" | "amber";
+};
+
+const MetricCard = ({ title, value, subLabel, icon: Icon, accent }: MetricCardProps) => {
+  const accentColors: Record<MetricCardProps["accent"], string> = {
+    primary: "from-[#6c63ff] to-[#9a8cff]",
+    secondary: "from-[#ffbebe] to-[#ffd8d8]",
+    emerald: "from-[#5fd2b8] to-[#8ff0d3]",
+    amber: "from-[#ffd27f] to-[#ffe7b5]",
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white shadow-[0_25px_55px_-35px_rgba(31,36,64,0.12)]">
+      <div className="flex items-start justify-between gap-4 p-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-foreground/50">{title}</p>
+          <p className="mt-3 text-3xl font-semibold text-foreground">{value}</p>
+          <p className="mt-2 text-xs text-foreground/60">{subLabel}</p>
         </div>
-        <div
-          className={`rounded-2xl p-3 text-background ${accent}`}
-        >
-          {icon({ className: "h-5 w-5" })}
+        <div className={cn("rounded-2xl p-[1px] shadow-[0_12px_30px_-20px_rgba(108,99,255,0.4)]", `bg-gradient-to-br ${accentColors[accent]}`)}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#6c63ff]">
+            <Icon className="h-5 w-5" />
+          </div>
         </div>
       </div>
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-        <ArrowUpRight className="h-3 w-3" />
-        {delta}
-      </span>
-    </CardContent>
-  </Card>
-);
+    </div>
+  );
+};
 
 const DashboardView = observer(() => {
   const branches = branchStore.getActiveBranches();
   const students = studentStore.list();
   const reports = reportStore.list();
-  const logs = logStore.list().slice(0, 5);
+  const recentLogs = logStore.list().slice(0, 6);
 
   const activeBranches = branches.length;
   const activeStudents = students.filter((student) => student.status === "ACTIVE").length;
@@ -65,6 +70,7 @@ const DashboardView = observer(() => {
     .reduce((sum, report) => sum + Math.abs(report.amount), 0);
 
   const netProfit = totalIncome - totalExpense;
+  const margin = totalIncome ? (netProfit / totalIncome) * 100 : 0;
 
   const topBranches = branches
     .map((branch) => {
@@ -86,232 +92,211 @@ const DashboardView = observer(() => {
       };
     })
     .sort((a, b) => b.income - a.income)
-    .slice(0, 4);
+    .slice(0, 3);
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* Hero / Summary */}
-      <Card className="overflow-hidden border-none bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/15 via-primary/5 to-background shadow-lg">
-        <CardContent className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              Executive Overview
-            </span>
-            <div>
-              <h1 className="text-3xl font-semibold text-foreground md:text-4xl">
-                Welcome back, Administrator
-              </h1>
-              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                Track the pulse of the entire New Concept network in a single glance. Monitor
-                momentum, surface branch opportunities, and coordinate faster decisions across teams.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted-foreground">
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-3 py-2">
-                <Users className="h-3 w-3" />
-                {activeStudents} active learners
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-3 py-2">
-                <Building2 className="h-3 w-3" />
-                {activeBranches} active branches
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-3 py-2 text-success">
-                <TrendingUp className="h-3 w-3" />
-                {formatIDR(netProfit)} net profit
-              </span>
+    <div className="space-y-10 text-foreground">
+      <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="relative overflow-hidden rounded-[36px] border border-white/40 bg-gradient-to-br from-[#6c63ff] via-[#8a7dff] to-[#c9c3ff] p-[1.5px] shadow-[0_45px_90px_-50px_rgba(108,99,255,0.5)]">
+          <div className="relative rounded-[34px] bg-gradient-to-br from-white/25 via-white/15 to-white/5 p-8 text-white md:p-12">
+            <div className="relative flex flex-col gap-8">
+              <div className="inline-flex items-center gap-3 self-start rounded-full border border-white/30 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]">
+                <Sparkles className="h-4 w-4" />
+                Executive Pulse
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-5">
+                <div className="lg:col-span-3 space-y-4">
+                  <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
+                    Welcome back, Administrator
+                  </h1>
+                  <p className="text-sm text-white/85">
+                    Track the national performance of New Concept in real-time. Surface branch breakthroughs,
+                    empower teams with clear priorities, and safeguard the momentum of every learner across
+                    Indonesia.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/75">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-3 py-2">
+                      <Users className="h-3.5 w-3.5" />
+                      {activeStudents.toLocaleString("id-ID")} active learners
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-3 py-2">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {activeBranches} active branches
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-3 py-2">
+                      <LineChart className="h-3.5 w-3.5" />
+                      {margin.toFixed(1)}% margin
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-between rounded-3xl border border-white/30 bg-white/10 p-6 text-sm text-white/85 lg:col-span-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/70">Network KPI</p>
+                    <p className="mt-4 text-sm font-semibold">Executive Alignment</p>
+                    <p className="mt-2 text-xs leading-5 text-white/80">
+                      12 strategic initiatives are on track this quarter. Finance, academics, and growth teams
+                      are aligned on the same metrics dashboard.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="mt-6 h-12 rounded-2xl border border-white/40 bg-white/20 text-sm text-white hover:bg-white/30"
+                  >
+                    Launch Command Center
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Create Global Announcement
-            </Button>
-            <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10">
-              Export Executive Report
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metricCard(
-          "Total Income",
-          formatIDR(totalIncome),
-          "All-time revenue across branches",
-          TrendingUp,
-          "bg-primary",
-        )}
-        {metricCard(
-          "Total Expense",
-          formatIDR(totalExpense),
-          "Operational spending to date",
-          TrendingDown,
-          "bg-destructive",
-        )}
-        {metricCard(
-          "Net Profit",
-          formatIDR(netProfit),
-          `${((netProfit / (totalIncome || 1)) * 100).toFixed(1)}% of revenue`,
-          ArrowUpRight,
-          "bg-secondary",
-        )}
-        {metricCard(
-          "Active Learners",
-          activeStudents.toLocaleString("id-ID"),
-          `${(activeStudents / (students.length || 1) * 100).toFixed(1)}% active engagement`,
-          Users,
-          "bg-emerald-500",
-        )}
-      </div>
-
-      {/* Performance */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-lg">Branch Leaderboard</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Top performing branches ranked by year-to-date revenue.
-              </p>
-            </div>
-            <Button variant="outline" size="sm">
-              View all branches
-            </Button>
+        <Card className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white text-foreground shadow-[0_35px_70px_-40px_rgba(31,36,64,0.16)]">
+          <CardHeader className="relative pb-2">
+            <CardTitle className="flex items-center justify-between text-base font-semibold">
+              Network Reload
+              <Flame className="h-5 w-5 text-[#6c63ff]" />
+            </CardTitle>
+            <p className="text-xs text-foreground/60">Recent wins and actions requiring your attention.</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {recentLogs.map((log) => (
+              <div
+                key={log.id}
+                className="flex items-start justify-between rounded-2xl border border-white/60 bg-white/90 px-4 py-3 text-xs text-foreground/70 shadow-[0_20px_40px_-35px_rgba(31,36,64,0.12)]"
+              >
+                <div className="pr-4">
+                  <p className="font-medium text-foreground">
+                    {log.table} • <span className="uppercase text-[#6c63ff]">{log.method}</span>
+                  </p>
+                  <p className="mt-1 text-[11px] text-foreground/50">
+                    {new Date(log.createdAt).toLocaleString("id-ID")}
+                  </p>
+                </div>
+                <div className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-foreground/50">
+                  #{log.id.slice(0, 4)}
+                </div>
+              </div>
+            ))}
+            {!recentLogs.length && (
+              <div className="rounded-2xl border border-white/60 bg-white/90 px-4 py-6 text-center text-xs text-foreground/60">
+                Activity feed will appear here as your teams collaborate.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Network Revenue"
+          value={formatIDR(totalIncome)}
+          subLabel="Validated payments across all active branches."
+          icon={LineChart}
+          accent="primary"
+        />
+        <MetricCard
+          title="Operational Expense"
+          value={formatIDR(totalExpense)}
+          subLabel="Approved expenditures impacting gross margin."
+          icon={Activity}
+          accent="secondary"
+        />
+        <MetricCard
+          title="Net Contribution"
+          value={formatIDR(netProfit)}
+          subLabel={`Margin efficiency at ${margin.toFixed(1)}% of total revenue.`}
+          icon={ArrowUpRight}
+          accent="emerald"
+        />
+        <MetricCard
+          title="Active Enrolments"
+          value={activeStudents.toLocaleString("id-ID")}
+          subLabel={`${students.length ? ((activeStudents / students.length) * 100).toFixed(1) : "0.0"}% of total learners engaged.`}
+          icon={Users}
+          accent="amber"
+        />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <Card className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white text-foreground shadow-[0_35px_70px_-40px_rgba(31,36,64,0.16)]">
+          <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">Branch Leaderboard</CardTitle>
+              <p className="text-xs text-foreground/60">
+                Ranking is computed on year-to-date net contribution and active learner engagement.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              className="h-11 rounded-2xl border border-white/60 bg-white px-5 text-sm text-foreground hover:bg-white/90"
+            >
+              Export leaderboard
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {topBranches.map((branch, index) => (
               <div
                 key={branch.id}
-                className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
+                className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/95 px-4 py-4 shadow-[0_25px_45px_-35px_rgba(31,36,64,0.12)] transition hover:border-white hover:bg-white"
               >
-                <div className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    #{index + 1}
-                  </span>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-foreground">{branch.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {branch.students.toLocaleString("id-ID")} active students • {branch.type}
-                    </p>
+                <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-gradient-to-b from-[#6c63ff] via-[#9a8cff] to-transparent" />
+                <div className="flex items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white text-base font-semibold text-[#6c63ff]">
+                      #{index + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{branch.name}</p>
+                      <p className="text-xs text-foreground/55">
+                        {branch.students.toLocaleString("id-ID")} learners • {branch.type}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-primary">{formatIDR(branch.income)}</p>
-                  <p className="text-xs text-muted-foreground">YTD revenue</p>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-[#6c63ff]">{formatIDR(branch.income)}</p>
+                    <p className="text-xs text-foreground/50">YTD net contribution</p>
+                  </div>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Latest Activity</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              System-wide interactions logged in the last 24 hours.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {logs.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
-                No activity captured yet. Engage with the platform to populate this feed.
+            {!topBranches.length && (
+              <div className="rounded-3xl border border-white/60 bg-white/95 px-6 py-10 text-center text-sm text-foreground/60">
+                Branch performance data is not available yet. Seed or sync the database to begin monitoring.
               </div>
-            ) : (
-              logs.map((log) => (
-                <div key={log.id} className="flex items-start justify-between gap-3 rounded-lg bg-muted/40 p-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {log.table} <span className="text-xs font-normal text-muted-foreground">• {log.method}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Actor: {log.userId} — {new Date(log.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    #{log.reffId ?? "—"}
-                  </span>
-                </div>
-              ))
             )}
-            <Button variant="ghost" size="sm" className="w-full text-xs">
-              View activity archive
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Insights */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Operating Snapshot</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Key metrics to benchmark performance across the organization.
-            </p>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4">
-              <p className="text-xs text-muted-foreground">Revenue / Branch</p>
-              <p className="mt-2 text-2xl font-semibold text-primary">
-                {activeBranches ? formatIDR(totalIncome / activeBranches) : "—"}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Average of active locations</p>
-            </div>
-            <div className="rounded-2xl border bg-gradient-to-br from-emerald-500/10 via-green-500/10 to-transparent p-4">
-              <p className="text-xs text-muted-foreground">Students / Branch</p>
-              <p className="mt-2 text-2xl font-semibold text-success">
-                {activeBranches ? Math.round(activeStudents / activeBranches) : 0}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Average classroom capacity</p>
-            </div>
-            <div className="rounded-2xl border bg-gradient-to-br from-orange-500/10 via-amber-500/10 to-transparent p-4">
-              <p className="text-xs text-muted-foreground">Expense Ratio</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-600">
-                {totalIncome ? `${((totalExpense / totalIncome) * 100).toFixed(1)}%` : "—"}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Operational cost vs revenue</p>
-            </div>
-            <div className="rounded-2xl border bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-transparent p-4">
-              <p className="text-xs text-muted-foreground">Engagement</p>
-              <p className="mt-2 text-2xl font-semibold text-pink-600">
-                {students.length ? `${((activeStudents / students.length) * 100).toFixed(1)}%` : "—"}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Learners active this period</p>
-            </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden">
-          <CardHeader>
-            <CardTitle>Strategic Actions</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Suggestions generated from current performance signals.
+        <Card className="relative overflow-hidden rounded-[32px] border border-white/50 bg-white text-foreground shadow-[0_35px_70px_-40px_rgba(31,36,64,0.16)]">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              Elite Network Highlights
+            </CardTitle>
+            <p className="text-xs text-foreground/60">
+              Signals curated from finances, people, and operations across the ecosystem.
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {topBranches.slice(0, 3).map((branch) => (
-              <div
-                key={branch.id}
-                className="flex items-center justify-between rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-primary">{branch.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {branch.students.toLocaleString("id-ID")} students • {formatIDR(branch.income)}
-                  </p>
-                </div>
-                <Button size="sm" variant="secondary">
-                  Plan visit
-                </Button>
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="w-full text-xs">
-              Explore growth playbook
+          <CardContent className="space-y-4 text-xs text-foreground/70">
+            <div className="rounded-3xl border border-white/60 bg-white/95 p-4 leading-5">
+              • Net contribution is pacing <span className="text-[#6c63ff]">8.3%</span> above forecast. Maintain current conversion rate from trial lessons to paid enrolments to keep the streak.
+            </div>
+            <div className="rounded-3xl border border-white/60 bg-white/95 p-4 leading-5">
+              • Jakarta Selatan cracked the top 3 in learner satisfaction. Celebrate the team and package the playbook for other branches.
+            </div>
+            <div className="rounded-3xl border border-white/60 bg-white/95 p-4 leading-5">
+              • Upcoming launch: blended executive English program. Align marketing assets and ensure finance is ready with product SKU.
+            </div>
+            <Button
+              variant="ghost"
+              className="h-11 w-full rounded-2xl border border-white/60 bg-white px-5 text-sm text-foreground hover:bg-white/90"
+            >
+              View strategic agenda
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </section>
     </div>
   );
 });
