@@ -11,6 +11,7 @@ import {
   GraduationCap,
   DollarSign,
   FileText,
+  BarChart3,
   Receipt,
   ClipboardList,
   History,
@@ -39,6 +40,7 @@ const getNavItems = (role: UserRoles | null): NavItem[] => {
         { title: "Classes", href: "/admin/classes", icon: GraduationCap },
         { title: "Fees", href: "/admin/fees", icon: DollarSign },
         { title: "Reports", href: "/admin/reports", icon: FileText },
+        { title: "Report Accounts", href: "/admin/report-accounts", icon: BarChart3 },
         { title: "Invoices", href: "/admin/invoices", icon: Receipt },
         { title: "Vouchers", href: "/admin/vouchers", icon: Ticket },
         { title: "Logs", href: "/admin/logs", icon: History },
@@ -84,11 +86,11 @@ export const Sidebar = observer(({ className, onItemClick }: SidebarProps) => {
   const pathname = usePathname();
 
   return (
-    <aside className={cn("flex h-full flex-col gap-6 px-6 py-8 text-[#1f2440]", className)}>
-      <div className="rounded-3xl border border-white/40 bg-white p-5 shadow-[0_35px_55px_-40px_rgba(108,99,255,0.25)] backdrop-blur-2xl">
-        <p className="text-xs uppercase tracking-[0.35em] text-[#1f2440]/70">Workspace</p>
+    <aside className={cn("flex h-full flex-col gap-6 px-6 py-8 text-[#3d2a13]", className)}>
+      <div className="rounded-3xl border border-white/40 bg-white p-5 shadow-[0_35px_55px_-40px_rgba(255,179,0,0.25)] backdrop-blur-2xl">
+        <p className="text-xs uppercase tracking-[0.35em] text-[#3d2a13]/70">Workspace</p>
         <p className="mt-3 text-lg font-semibold">{authStore.currentUser?.name ?? "Team"}</p>
-        <p className="text-xs text-[#1f2440]/60">{authStore.currentUser?.email ?? "Signed in"}</p>
+        <p className="text-xs text-[#3d2a13]/60">{authStore.currentUser?.email ?? "Signed in"}</p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-3">
@@ -102,12 +104,12 @@ export const Sidebar = observer(({ className, onItemClick }: SidebarProps) => {
               className={cn(
                 "group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-white/40 px-4 py-3 text-sm font-medium tracking-wide transition",
                 isActive
-                  ? "bg-gradient-to-r from-[#6c63ff]/18 via-[#9a8cff]/10 to-transparent text-[#1f2440] shadow-[0_25px_45px_-25px_rgba(108,99,255,0.3)]"
-                  : "bg-white text-[#1f2440] hover:border-white hover:bg-white/90"
+                  ? "bg-gradient-to-r from-[#FFB300]/35 via-[#FFC542]/15 to-transparent text-[#3d2a13] shadow-[0_25px_45px_-25px_rgba(255,179,0,0.35)]"
+                  : "bg-white text-[#3d2a13] hover:border-white hover:bg-white/90"
               )}
             >
-              <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#6c63ff]/60 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
-              <Icon className={cn("h-4 w-4 transition", isActive ? "scale-110 text-[#6c63ff]" : "text-[#1f2440]/45")} />
+              <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#FFB300]/60 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
+              <Icon className={cn("h-4 w-4 transition", isActive ? "scale-110 text-[#FFB300]" : "text-[#3d2a13]/45")} />
               <span>{title}</span>
             </Link>
           );

@@ -7,7 +7,8 @@ import { authStore, rootStore } from "@/stores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { UserRoles } from "@/models/enums";
 import { resolveRedirectPath } from "@/utils/routerGuard";
@@ -74,6 +75,15 @@ export const LoginView = observer(() => {
             setIsLoading(false);
         }
     };
+
+    const demoAccounts = [
+        { role: "Admin", email: "admin@newconcept.com", password: "admin123" },
+        { role: "Manager Pusat", email: "manager.pusat@newconcept.com", password: "manager123" },
+        { role: "Manager Selatan", email: "manager.selatan@newconcept.com", password: "manager123" },
+        { role: "Staff Pusat 1", email: "staff1.pusat@newconcept.com", password: "staff123" },
+        { role: "Staff Selatan 1", email: "staff1.selatan@newconcept.com", password: "staff123" },
+        { role: "Student", email: "ahmad.rizki@student.com", password: "student123" },
+    ];
 
     return (
         <div className="relative flex min-h-screen w-full flex-col justify-center overflow-hidden bg-gradient-to-br from-[#FFF4D4] via-[#FFF9EC] to-[#FFE69A] p-4 lg:p-8">
@@ -178,32 +188,37 @@ export const LoginView = observer(() => {
                                         {isLoading ? "Signing in..." : "Sign In"}
                                     </Button>
                                 </form>
-                                <div className="mt-8 rounded-2xl border border-[#FFB300]/30 bg-[#FFF4D4] p-4">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#FFB300]">
-                                        Demo Accounts
-                                    </p>
-                                    <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-[#9C7611]">
-                                        <div>
-                                            <p className="font-semibold text-foreground">Admin</p>
-                                            <p>admin@newconcept.com</p>
-                                            <p className="text-[11px]">admin123</p>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground">Manager</p>
-                                            <p>manager.pusat@newconcept.com</p>
-                                            <p className="text-[11px]">manager123</p>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground">Staff</p>
-                                            <p>staff1.pusat@newconcept.com</p>
-                                            <p className="text-[11px]">staff123</p>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground">Student</p>
-                                            <p>ahmad@student.com</p>
-                                            <p className="text-[11px]">student123</p>
-                                        </div>
-                                    </div>
+                                <div className="mt-6">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="w-full rounded-2xl border-[#FFB300]/40 bg-white/70 text-sm font-semibold text-[#9C7611] hover:bg-[#FFF4D4]/70 hover:text-[#3d2a13]"
+                                            >
+                                                Lihat Akun Demo
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Demo Accounts</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-3">
+                                                {demoAccounts.map(({ role, email, password }) => (
+                                                    <div
+                                                        key={email}
+                                                        className="rounded-2xl border border-[#FFB300]/30 bg-[#FFF9EC] px-4 py-3 shadow-sm"
+                                                    >
+                                                        <p className="text-sm font-semibold text-[#3d2a13]">{role}</p>
+                                                        <p className="text-sm text-[#9C7611]">{email}</p>
+                                                        <p className="text-xs uppercase tracking-[0.25em] text-[#FFB300]">
+                                                            Password: {password}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                                 <p className="mt-6 text-center text-xs text-muted-foreground">
                                     By continuing you agree to our{" "}

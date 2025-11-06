@@ -2,18 +2,18 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f6ff;
-  --foreground: #1f2440;
-  --muted: rgba(31, 36, 64, 0.06);
-  --border: rgba(31, 36, 64, 0.12);
-  --primary: #6c63ff;
-  --primary-foreground: #ffffff;
+  --background: #fff7e3;
+  --foreground: #3d2a13;
+  --muted: rgba(61, 42, 19, 0.06);
+  --border: rgba(61, 42, 19, 0.14);
+  --primary: #ffb300;
+  --primary-foreground: #2b1b04;
   --secondary: #ffffff;
-  --secondary-foreground: #1f2440;
-  --success: #1fbe8a;
+  --secondary-foreground: #3d2a13;
+  --success: #2ebd7f;
   --destructive: #f25757;
-  --accent: #9a8cff;
-  --shadow-soft: 0 35px 70px -40px rgba(108, 99, 255, 0.25);
+  --accent: #ffc542;
+  --shadow-soft: 0 35px 70px -40px rgba(255, 179, 0, 0.35);
 }
 
 @theme inline {
@@ -34,8 +34,8 @@
 
 body {
   background:
-    radial-gradient(120% 120% at 0% 0%, rgba(156, 140, 255, 0.35) 0%, rgba(156, 140, 255, 0) 45%),
-    radial-gradient(110% 120% at 100% 0%, rgba(255, 182, 193, 0.28) 0%, rgba(255, 182, 193, 0) 45%),
+    radial-gradient(120% 120% at 0% 0%, rgba(255, 179, 0, 0.35) 0%, rgba(255, 179, 0, 0) 45%),
+    radial-gradient(110% 120% at 100% 0%, rgba(255, 214, 107, 0.32) 0%, rgba(255, 214, 107, 0) 45%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
@@ -44,7 +44,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(108, 99, 255, 0.4) transparent;
+  scrollbar-color: rgba(255, 179, 0, 0.35) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -53,26 +53,7 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(108, 99, 255, 0.4);
-  border-radius: 9999px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
+  background-color: rgba(255, 179, 0, 0.4);
   border-radius: 9999px;
 }
 

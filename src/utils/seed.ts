@@ -42,6 +42,8 @@ interface SeedUserInput {
 
 const isBrowser = () => typeof window !== "undefined";
 
+const toEmailSlug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ".");
+
 const createUserRecords = async (users: SeedUserInput[]): Promise<TblUser[]> => {
   const now = nowISO();
 
@@ -163,6 +165,37 @@ export const seedDatabase = async (force = false) => {
       role: UserRoles.STAFF,
     },
   ];
+
+  branches.forEach((branch) => {
+    const branchUsers = userInputs.filter((user) => user.branchId === branch.id);
+    const managerCount = branchUsers.filter((user) => user.role === UserRoles.MANAGER).length;
+    const staffCount = branchUsers.filter((user) => user.role === UserRoles.STAFF).length;
+
+    const branchLabel = branch.name.replace(/^New Concept\s+/i, "").trim();
+    const displayBranch = branchLabel.length > 0 ? branchLabel : branch.name;
+    const emailSlug = toEmailSlug(branchLabel || branch.code);
+
+    if (managerCount === 0) {
+      userInputs.push({
+        branchId: branch.id,
+        name: `Manager ${displayBranch}`,
+        email: `manager.${emailSlug}@newconcept.com`,
+        password: "manager123",
+        role: UserRoles.MANAGER,
+      });
+    }
+
+    for (let index = staffCount; index < 2; index += 1) {
+      const staffNumber = index + 1;
+      userInputs.push({
+        branchId: branch.id,
+        name: `Staff ${displayBranch} ${staffNumber}`,
+        email: `staff${staffNumber}.${emailSlug}@newconcept.com`,
+        password: "staff123",
+        role: UserRoles.STAFF,
+      });
+    }
+  });
 
   const studentNames = [
     "Ahmad Rizki",
