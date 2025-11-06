@@ -49,12 +49,9 @@ export const Navbar = observer(({ onMenuClick }: NavbarProps) => {
         >
           <span className="absolute -left-3 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full bg-[#FFB300]/30 blur-xl transition group-hover:bg-[#FFB300]/40" />
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1BYJCVCEIv4VSgfxpcPfj_WTtzHv7Da3wvA&s"
+            src="/logo.png"
             alt="New Concept Logo"
             className="h-8 w-8 rounded-lg object-cover"
-            onError={(event) => {
-              event.currentTarget.src = "/logo.png";
-            }}
           />
           <span className="relative text-lg font-semibold">New Concept</span>
         </Link>
